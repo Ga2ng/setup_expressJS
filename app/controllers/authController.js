@@ -30,10 +30,10 @@ exports.login = async (req, res) => {
     // Buat token JWT
     const token = jwt.sign(
       { id: mahasiswa._id, nama_lengkap: mahasiswa.nama_lengkap },
-      "kunciRahasia"
+      "secretKey"
     );
 
-    console.log('token', token);
+    // console.log('token', token);
     const decodedToken = jwt.decode(token);
 
     console.log("Decoded Token:", decodedToken);

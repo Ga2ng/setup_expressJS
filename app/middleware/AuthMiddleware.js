@@ -1,6 +1,18 @@
 const jwt = require('jsonwebtoken');
+const db = require("../models");
+const Mahasiswa = db.mahasiswa;
 
-const authMiddleware = (req, res, next) => {
+const findUserByIdInDatabase = async (userId) => {
+  try {
+    const user = await Mahasiswa.findById(userId);
+    return user;
+  } catch (error) {
+    console.error('Gagal mencari user di database:', error);
+    return null;
+  }
+};
+
+const authMiddleware = async (req, res, next) => {
   // Periksa apakah ada token dalam header permintaan
   const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
@@ -10,11 +22,13 @@ const authMiddleware = (req, res, next) => {
   }
 
   try {
-    // Verifikasi token
-    const decodedToken = jwt.verify(token, 'kunciRahasia'); // Gantilah 'kunciRahasia' dengan kunci rahasia yang sesuai
+    const decodedToken = jwt.verify(token, 'secretKey');
 
-    // Jika verifikasi berhasil, lanjutkan ke rute berikutnya
-    req.user = decodedToken; // Menyimpan data pengguna yang diperoleh dari token di objek req untuk digunakan di rute berikutnya jika diperlukan
+    const userFromDatabase = await findUserByIdInDatabase(decodedToken.id);
+
+    if (!userFromDatabase) {
+      return res.status(401).json({ message: 'ID tidak terdaftar di database' });
+    }
     next();
   } catch (error) {
     // Jika verifikasi gagal, kirim respon error Unauthorized (401)
